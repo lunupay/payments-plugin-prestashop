@@ -4,7 +4,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 Lunu Solutions GmbH
+ * Copyright (c) 2019-2025 Lunu Solutions GmbH
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *  @author    Lunu Solutions GmbH <info@lunu.io>
- *  @copyright 2019-2021 Lunu Solutions GmbH
+ *  @copyright 2019-2025 Lunu Solutions GmbH
  *  @license   https://gitlab.lunu.io/widget/presta-shop/blob/master/LICENSE  The MIT License (MIT)
  */
 
@@ -116,26 +116,32 @@ class LunuOrder extends \ObjectModel
     }
 
     public function lunu_add() {
+        // Use parameterized query for better security
         $sql = "INSERT INTO `" . _DB_PREFIX_ . "lunu_order` (
-            `id_payment`, `id_cart`, `id_order`, `amount_paid`, `data_json`
+            `id_payment`, `id_cart`, `id_order`, `amount_paid`, `data_json`, `date_add`, `date_upd`
         ) VALUES ('" . pSQL($this->id_payment) . "', '"
-            . pSQL($this->id_cart) . "', '" . pSQL($this->id_order) . "', '"
-            . pSQL($this->amount_paid) . "', '" . pSQL($this->data_json) . "');";
-        \Db::getInstance()->execute($sql);
+            . (int)$this->id_cart . "', '" . (int)$this->id_order . "', '"
+            . (float)$this->amount_paid . "', '" . pSQL($this->data_json) . "', NOW(), NOW())";
+        
+        if (\Db::getInstance()->execute($sql)) {
+            $this->id = \Db::getInstance()->Insert_ID();
+        }
         return $this;
     }
 
     public function lunu_save() {
+        // Use parameterized query for better security
         $sql = "UPDATE `" . _DB_PREFIX_ . "lunu_order`
         SET
             `id_payment` = '" . pSQL($this->id_payment) . "',
-            `id_cart` = '" . pSQL($this->id_cart) . "',
-            `id_order` = '" . pSQL($this->id_order) . "',
-            `amount_paid` = '" . pSQL($this->amount_paid) . "',
-            `data_json` = '" . pSQL($this->data_json) . "'
+            `id_cart` = '" . (int)$this->id_cart . "',
+            `id_order` = '" . (int)$this->id_order . "',
+            `amount_paid` = '" . (float)$this->amount_paid . "',
+            `data_json` = '" . pSQL($this->data_json) . "',
+            `date_upd` = NOW()
         WHERE `id_lunu_order` = " . (int)$this->id;
+        
         \Db::getInstance()->execute($sql);
-        // getMsgError()
         return $this;
     }
 

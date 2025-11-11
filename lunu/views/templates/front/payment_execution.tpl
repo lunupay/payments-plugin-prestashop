@@ -3,7 +3,7 @@
 *
 * The MIT License (MIT)
 *
-* Copyright (c) 2019-2021 Lunu Solutions GmbH
+* Copyright (c) 2019-2025 Lunu Solutions GmbH
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of
 * this software and associated documentation files (the "Software"), to deal in
@@ -23,7 +23,7 @@
 * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 *
 *  @author    Lunu Solutions GmbH <info@lunu.io>
-*  @copyright 2019-2021 Lunu Solutions GmbH
+*  @copyright 2019-2025 Lunu Solutions GmbH
 *  @license   https://gitlab.lunu.io/widget/presta-shop/blob/master/LICENSE  The MIT License (MIT)
 *}
 {capture name=path}
