@@ -32,11 +32,11 @@ namespace Lunu;
 
 // Production settings (default)
 DEFINE('LUNUPAYMENT_PROCESSING_VERSION', 'api');
-DEFINE('LUNUPAYMENT_WIDGET_VERSION', 'alpha');
+DEFINE('LUNUPAYMENT_WIDGET_HOST', 'widget.lunupay.com');
 
 // Sandbox settings (used when Sandbox mode is enabled)
 DEFINE('LUNUPAYMENT_PROCESSING_VERSION_SANDBOX', 'api.sandbox');
-DEFINE('LUNUPAYMENT_WIDGET_VERSION_SANDBOX', 'sandbox');
+DEFINE('LUNUPAYMENT_WIDGET_HOST_SANDBOX', 'widget.sandbox.lunupay.com');
 
 
 class Lunu
@@ -65,7 +65,7 @@ class Lunu
 
     // Default to production; will be overridden to sandbox if LUNU_SANDBOX_ENABLED is checked
     public static $endpoint_version = LUNUPAYMENT_PROCESSING_VERSION;
-    public static $widget_version = LUNUPAYMENT_WIDGET_VERSION;
+    public static $widget_host = LUNUPAYMENT_WIDGET_HOST;
 
     public static $lunu_order = null;
     public static $request_response = null;
@@ -79,7 +79,7 @@ class Lunu
             self::$lunu_sandbox_enabled = $config['LUNU_SANDBOX_ENABLED'] == 'on';
             if (self::$lunu_sandbox_enabled) {
                 self::$endpoint_version = LUNUPAYMENT_PROCESSING_VERSION_SANDBOX;
-                self::$widget_version = LUNUPAYMENT_WIDGET_VERSION_SANDBOX;
+                self::$widget_host = LUNUPAYMENT_WIDGET_HOST_SANDBOX;
             }
 
         }
@@ -210,7 +210,7 @@ class Lunu
     )
     {
         return self::request(
-            'https://' . self::$endpoint_version . '.lunupay.com/api/v1/payments/' . $route,
+            'https://' . self::$endpoint_version . '.lunupay.com/legacy-api/v1/payments/' . $route,
             $params,
             $headers
         );
@@ -223,7 +223,7 @@ class Lunu
     )
     {
         return self::request(
-            'https://' . self::$endpoint_version . '.lunupay.com/api/v1/refund/' . $route,
+            'https://' . self::$endpoint_version . '.lunupay.com/legacy-api/v1/refund/' . $route,
             $params,
             $headers
         );

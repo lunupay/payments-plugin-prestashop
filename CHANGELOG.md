@@ -5,6 +5,13 @@ All notable changes to the Lunu PrestaShop Payment Module will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Migrated API endpoints from `https://api.lunupay.com/api/v1/...` (production) and `https://api.sandbox.lunupay.com/api/v1/...` (sandbox) to the `legacy-api/v1` path: `https://api.lunupay.com/legacy-api/v1/...` and `https://api.sandbox.lunupay.com/legacy-api/v1/...`
+- New widget payment link format: `https://widget.lunupay.com/?order_id=...&success=...&cancel=...` (production) and `https://widget.sandbox.lunupay.com/?...` (sandbox)
+- Widget link now uses the payment `id` from the create-payment API response (`order_id` parameter) instead of the `confirmation_token` hash-route parameters
+
 ## [2.2.1] - 2025-01-10
 
 ### Security

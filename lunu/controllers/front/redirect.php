@@ -149,7 +149,7 @@ class LunuRedirectModuleFrontController extends ModuleFrontController
             'response' => $payment
         ));
 
-        if (empty($payment)) {
+        if (empty($payment) || empty($payment['id'])) {
             \Lunu\Lunu::addCheckoutError('Lunu Payment service is temporarily unavailable');
             \Tools::redirect('index.php?controller=order&step=3&' . http_build_query(array(
                 'errors' => \Lunu\Lunu::$errors
@@ -172,13 +172,10 @@ class LunuRedirectModuleFrontController extends ModuleFrontController
             );
         }
 
-        \Tools::redirect('https://widget.lunupay.com/' . \Lunu\Lunu::$widget_version . '/#/?' . http_build_query(array(
-            'action' => 'select',
-            'token' => $payment['confirmation_token'],
+        \Tools::redirect('https://' . \Lunu\Lunu::$widget_host . '/?' . http_build_query(array(
+            'order_id' => $payment['id'],
             'success' => $success_url,
-            'cancel' => $cancel_url,
-            'enableLunuGift' => \Lunu\Lunu::$lunu_gift_enabled ? 1 : 0,
-            'version' => \Lunu\Lunu::VERSION,
+            'cancel' => $cancel_url
         )));
     }
 }
