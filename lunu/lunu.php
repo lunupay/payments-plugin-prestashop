@@ -4,7 +4,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 Lunu Solutions GmbH
+ * Copyright (c) 2019-2025 Lunu Solutions GmbH
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *  @author    Lunu Solutions GmbH <info@lunu.io>
- *  @copyright 2019-2021 Lunu Solutions GmbH
+ *  @copyright 2019-2025 Lunu Solutions GmbH
  *  @license   https://gitlab.lunu.io/widget/presta-shop/blob/master/LICENSE  The MIT License (MIT)
  */
 
@@ -48,11 +48,11 @@ class Lunu extends PaymentModule
     {
         $this->name = 'lunu';
         $this->tab = 'payments_gateways';
-        $this->version = '2.2.0';
+        $this->version = '2.2.1';
         $this->author = 'Lunu Solutions GmbH';
         $this->is_eu_compatible = 1;
         $this->controllers = array('payment', 'redirect', 'callback', 'cancel');
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = array('min' => '1.7.0', 'max' => '8.99.99');
         $this->module_key = '15b30a9cbfad69424dd2aac3cbea5616';
 
         $this->currencies = true;
@@ -116,11 +116,7 @@ class Lunu extends PaymentModule
 
 
         \Configuration::updateValue('LUNU_AWAITING_PAYMENT', $order_pending_id);
-
-        // \Configuration::updateValue('LUNU_APP_ID', '8ce43c7a-2143-467c-b8b5-fa748c598ddd');
-        // \Configuration::updateValue('LUNU_API_SECRET', 'f1819284-031e-42ad-8832-87c0f1145696');
         \Configuration::updateValue('LUNU_PENDING_ENABLED', 'on');
-        // \Configuration::updateValue('LUNU_LOG_ENABLED', 'on');
 
         if (!parent::install()
             || !$this->installDB()
@@ -143,7 +139,7 @@ class Lunu extends PaymentModule
 
     public function installDB()
     {
-        return \Db::getInstance()->execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'lunu_order` (
+        $sql = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'lunu_order` (
             `id_lunu_order` int(10) NOT NULL PRIMARY KEY AUTO_INCREMENT,
             `id_payment` VARCHAR(250) NOT NULL,
             `id_cart` VARCHAR(250) NOT NULL,
@@ -151,10 +147,15 @@ class Lunu extends PaymentModule
             `amount_paid` FLOAT,
             `date_add` DATETIME,
             `date_upd` DATETIME,
-            `data_json` MEDIUMTEXT
+            `data_json` MEDIUMTEXT,
+            INDEX `idx_id_order` (`id_order`),
+            INDEX `idx_id_cart` (`id_cart`),
+            INDEX `idx_id_payment` (`id_payment`)
           )
           COLLATE=\'utf8_unicode_ci\'
-          ENGINE=' . _MYSQL_ENGINE_);
+          ENGINE=' . _MYSQL_ENGINE_;
+        
+        return \Db::getInstance()->execute($sql);
     }
 
     private function uninstallModuleTab($class_name)

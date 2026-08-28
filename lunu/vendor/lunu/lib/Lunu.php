@@ -4,7 +4,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 Lunu Solutions GmbH
+ * Copyright (c) 2019-2025 Lunu Solutions GmbH
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,59 +24,25 @@
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *  @author    Lunu Solutions GmbH <info@lunu.io>
- *  @copyright 2019-2021 Lunu Solutions GmbH
+ *  @copyright 2019-2025 Lunu Solutions GmbH
  *  @license   https://gitlab.lunu.io/widget/presta-shop/blob/master/LICENSE  The MIT License (MIT)
  */
 
 namespace Lunu;
 
-DEFINE('LUNUPAYMENT_SERVER_NAME', $_SERVER['SERVER_NAME']);
+// Production settings (default)
+DEFINE('LUNUPAYMENT_PROCESSING_VERSION', 'api');
+DEFINE('LUNUPAYMENT_WIDGET_HOST', 'widget.lunupay.com');
 
-DEFINE('LUNUPAYMENT_PROCESSING_VERSION', (
-    strpos(LUNUPAYMENT_SERVER_NAME, 'dev.lunu.io') !== false
-        ? 'api.dev'
-        : (
-            strpos(LUNUPAYMENT_SERVER_NAME, 'rc.lunu.io') !== false
-                ? 'api.rc'
-                : (
-                    strpos(LUNUPAYMENT_SERVER_NAME, 'testing.lunu.io') !== false
-                        ? 'api.testing'
-                        : (
-                            strpos(LUNUPAYMENT_SERVER_NAME, 'sandbox.lunu.io') !== false
-                                ? 'api.sandbox'
-                                : 'api'
-                        )
-                )
-        )
-));
-
-DEFINE('LUNUPAYMENT_WIDGET_VERSION', (
-    LUNUPAYMENT_PROCESSING_VERSION === 'api.dev'
-        ? 'beta'
-        : (
-          LUNUPAYMENT_PROCESSING_VERSION === 'api.testing'
-              ? 'testing'
-              : (
-                LUNUPAYMENT_PROCESSING_VERSION === 'api.rc'
-                    ? 'rc'
-                    : (
-                      LUNUPAYMENT_PROCESSING_VERSION === 'api.sandbox'
-                          ? 'sandbox'
-                          : 'alpha'
-                      )
-                )
-          )
-));
-
-
-DEFINE('LUNUPAYMENT_PROCESSING_VERSION_SANDBOX', 'api.testing');
-DEFINE('LUNUPAYMENT_WIDGET_VERSION_SANDBOX', 'testing');
+// Sandbox settings (used when Sandbox mode is enabled)
+DEFINE('LUNUPAYMENT_PROCESSING_VERSION_SANDBOX', 'api.sandbox');
+DEFINE('LUNUPAYMENT_WIDGET_HOST_SANDBOX', 'widget.sandbox.lunupay.com');
 
 
 class Lunu
 {
     const LUNU_DEFAULT_EXPIRES = 3600;
-    const VERSION = '2.2.0';
+    const VERSION = '2.2.1';
     const CONFIG_KEYS = array(
         'LUNU_SANDBOX_ENABLED',
         'LUNU_API_SECRET',
@@ -97,16 +63,9 @@ class Lunu
     public static $lunu_log_enabled = false;
     public static $lunu_coupon_prefix = '';
 
-
+    // Default to production; will be overridden to sandbox if LUNU_SANDBOX_ENABLED is checked
     public static $endpoint_version = LUNUPAYMENT_PROCESSING_VERSION;
-    // public static $endpoint_version = 'api';
-    // public static $endpoint_version = 'api.dev';
-    // public static $endpoint_version = 'api.rc';
-
-    public static $widget_version = LUNUPAYMENT_WIDGET_VERSION;
-    // public static $widget_version = 'alpha';
-    // public static $widget_version = 'beta';
-    // public static $widget_version = 'rc';
+    public static $widget_host = LUNUPAYMENT_WIDGET_HOST;
 
     public static $lunu_order = null;
     public static $request_response = null;
@@ -120,7 +79,7 @@ class Lunu
             self::$lunu_sandbox_enabled = $config['LUNU_SANDBOX_ENABLED'] == 'on';
             if (self::$lunu_sandbox_enabled) {
                 self::$endpoint_version = LUNUPAYMENT_PROCESSING_VERSION_SANDBOX;
-                self::$widget_version = LUNUPAYMENT_WIDGET_VERSION_SANDBOX;
+                self::$widget_host = LUNUPAYMENT_WIDGET_HOST_SANDBOX;
             }
 
         }
@@ -150,14 +109,21 @@ class Lunu
     public static function lunu_log($message = '', $data = array())
     {
         if (!self::$lunu_log_enabled) return;
-        ob_start();
-        var_dump($data);
-        file_put_contents(
-            dirname(dirname(dirname(dirname(dirname(dirname(dirname(__FILE__)))))))
-              . '/lunu_log.txt',
-            date('Y-m-d H:i:s') . ' ' . $message . ' ' . ob_get_clean() . PHP_EOL,
-            FILE_APPEND
-        );
+        
+        // Use PrestaShop's Logger class for secure logging
+        $log_message = 'Lunu Payment: ' . $message;
+        if (!empty($data)) {
+            // Remove sensitive data before logging
+            if (isset($data['email'])) {
+                $data['email'] = '***@***';
+            }
+            if (isset($data['request_data']['email'])) {
+                $data['request_data']['email'] = '***@***';
+            }
+            $log_message .= ' | Data: ' . json_encode($data);
+        }
+        
+        \PrestaShopLogger::addLog($log_message, 1, null, 'Lunu', null, true);
         return null;
     }
 
@@ -205,7 +171,8 @@ class Lunu
             'Authorization: Basic ' . base64_encode($app_id . ':' . $api_secret)
         ), $headers));
         curl_setopt($curl, CURLOPT_USERAGENT, 'Prestashop v' . _PS_VERSION_ . ' | Lunu Extension ' . self::VERSION);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
 
         $raw_response = curl_exec($curl);
         $decoded_response = json_decode($raw_response, true);
@@ -243,7 +210,7 @@ class Lunu
     )
     {
         return self::request(
-            'https://' . self::$endpoint_version . '.lunu.io/api/v1/payments/' . $route,
+            'https://' . self::$endpoint_version . '.lunupay.com/legacy-api/v1/payments/' . $route,
             $params,
             $headers
         );
@@ -256,7 +223,7 @@ class Lunu
     )
     {
         return self::request(
-            'https://' . self::$endpoint_version . '.lunu.io/api/v1/refund/' . $route,
+            'https://' . self::$endpoint_version . '.lunupay.com/legacy-api/v1/refund/' . $route,
             $params,
             $headers
         );

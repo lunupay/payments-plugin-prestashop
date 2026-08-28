@@ -4,7 +4,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 Lunu Solutions GmbH
+ * Copyright (c) 2019-2025 Lunu Solutions GmbH
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -24,7 +24,7 @@
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *  @author    Lunu Solutions GmbH <info@lunu.io>
- *  @copyright 2019-2021 Lunu Solutions GmbH
+ *  @copyright 2019-2025 Lunu Solutions GmbH
  *  @license   https://gitlab.lunu.io/widget/presta-shop/blob/master/LICENSE  The MIT License (MIT)
  */
 
@@ -149,7 +149,7 @@ class LunuRedirectModuleFrontController extends ModuleFrontController
             'response' => $payment
         ));
 
-        if (empty($payment)) {
+        if (empty($payment) || empty($payment['id'])) {
             \Lunu\Lunu::addCheckoutError('Lunu Payment service is temporarily unavailable');
             \Tools::redirect('index.php?controller=order&step=3&' . http_build_query(array(
                 'errors' => \Lunu\Lunu::$errors
@@ -172,13 +172,10 @@ class LunuRedirectModuleFrontController extends ModuleFrontController
             );
         }
 
-        \Tools::redirect('https://widget.lunu.io/' . \Lunu\Lunu::$widget_version . '/#/?' . http_build_query(array(
-            'action' => 'select',
-            'token' => $payment['confirmation_token'],
+        \Tools::redirect('https://' . \Lunu\Lunu::$widget_host . '/?' . http_build_query(array(
+            'order_id' => $payment['id'],
             'success' => $success_url,
-            'cancel' => $cancel_url,
-            'enableLunuGift' => \Lunu\Lunu::$lunu_gift_enabled ? 1 : 0,
-            'version' => \Lunu\Lunu::VERSION,
+            'cancel' => $cancel_url
         )));
     }
 }
